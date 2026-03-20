@@ -2,6 +2,7 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
+#wakatime extension disabled for now - web should still work though
 driver = webdriver.Chrome()
 driver.get("https://wakatime.com/dashboard")
 driver.implicitly_wait(0.5) 
