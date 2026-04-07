@@ -15,8 +15,14 @@ linkToLatestPost2 = linkToLatestPost.find_element(By.TAG_NAME, "a")
 #For later backend use - date of latest post so only run for new posts
 datenow = linkToLatestPost2.text
 
-linkToLatestPost3 = linkToLatestPost2.get_attribute("href")
+#print(linkToLatestPost2.get_attribute("outerHTML"))
 linkToLatestPost2.click()
+
+
+subHeadings = driver.find_elements(By.CLASS_NAME, "uw-copy-text__wrapper ")
+for sub in subHeadings:
+    print(sub.get_attribute("outerHTML"))
+#print(subHeadings.get_attribute("outerHTML"))
 
 
 
