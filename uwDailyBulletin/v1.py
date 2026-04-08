@@ -37,6 +37,10 @@ linkToLatestPost2.click()
 class subTopic:
     id: str
     title: str
+    paragraphs: list[str] = field(default_factory=list)
+    #basically calling list constructor to make empty list for each instance of subTopic - if i did = [] would be same list for all instances
+    
+    
     
 
 subHeadings = driver.find_elements(By.CLASS_NAME, "uw-copy-text__wrapper ")
@@ -44,9 +48,9 @@ subHeadings = driver.find_elements(By.CLASS_NAME, "uw-copy-text__wrapper ")
 #    print(sub.get_attribute("outerHTML"))
 #print(subHeadings.get_attribute("outerHTML"))
 
-html = driver.page_source
-with open("htmlOrg.html", "w", encoding="utf-8") as f:
-    f.write(html)
+#html = driver.page_source
+#with open("htmlOrg.html", "w", encoding="utf-8") as f:
+#    f.write(html)
 
 
 
