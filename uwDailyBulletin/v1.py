@@ -3,6 +3,8 @@ import time
 import argparse
 #Built in python module for running command line args
 
+from bs4 import BeautifulSoup
+
 from datetime import datetime
 from typing import Optional
 
@@ -60,23 +62,26 @@ class subTopic:
 
 #"." instead of spaces for css selector to indicate compound classes
 subHeadings = driver.find_elements(By.CSS_SELECTOR, ".layout__region.layout__region--first .uw-text-align--left.block.block-layout-builder.block-inline-blockuw-cbl-copy-text .uw-copy-text .uw-copy-text__wrapper")
-count = 0
-for sub in subHeadings:
-    if count ==3:
-        print(sub.get_attribute("outerHTML"))
-    count+=1
-print(count)
+mainContent = subHeadings[2].get_attribute("outerHTML")
 
-""" subHeadings = driver.find_elements(By.CSS_SELECTOR, ".uw-text-align--left.block.block-layout-builder.block-inline-blockuw-cbl-copy-text")
-for sub in subHeadings:
-    print(sub.get_attribute("outerHTML")) """
+headings = []
+n = mainContent.find("<h2>")
+while n != -1:
+    m = mainContent.find("<h2>", n+1)
+    if m == -1:
+        headings.append(mainContent[n:])
+    else:
+        headings.append(mainContent[n:m])
+    n = m
+print(headings[1])
+
 
 
 #print(subHeadings.get_attribute("outerHTML"))
 
-#html = driver.page_source
-#with open("htmlOrg.html", "w", encoding="utf-8") as f:
-#    f.write(html)
+""" html = mainContent
+with open("htmlOrg.html", "w", encoding="utf-8") as f:
+    f.write(html) """
 
 
 
