@@ -55,11 +55,14 @@ class subTopic:
 
 #def textCollector - 
 
+#line 568 - all the important content is in there
 
 #"." instead of spaces for css selector to indicate compound classes
-subHeadings = driver.find_elements(By.CSS_SELECTOR, ".uw-text-align--left.block.block-layout-builder.block-inline-blockuw-cbl-copy-text")
+""" subHeadings = driver.find_elements(By.CSS_SELECTOR, ".uw-text-align--left.block.block-layout-builder.block-inline-blockuw-cbl-copy-text")
 for sub in subHeadings:
-    print(sub.get_attribute("outerHTML"))
+    print(sub.get_attribute("outerHTML")) """
+
+
 #print(subHeadings.get_attribute("outerHTML"))
 
 #html = driver.page_source
