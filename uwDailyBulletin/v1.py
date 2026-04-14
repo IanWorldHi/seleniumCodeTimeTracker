@@ -55,9 +55,18 @@ class subTopic:
 
 #def textCollector - 
 
-#line 568 - all the important content is in there
+#line 568 & 569 - all the important content is in there
+#end 1289 (for 668) till 1292 so should be chill up to 566
 
 #"." instead of spaces for css selector to indicate compound classes
+subHeadings = driver.find_elements(By.CSS_SELECTOR, ".layout__region.layout__region--first .uw-text-align--left.block.block-layout-builder.block-inline-blockuw-cbl-copy-text .uw-copy-text .uw-copy-text__wrapper")
+count = 0
+for sub in subHeadings:
+    if count ==3:
+        print(sub.get_attribute("outerHTML"))
+    count+=1
+print(count)
+
 """ subHeadings = driver.find_elements(By.CSS_SELECTOR, ".uw-text-align--left.block.block-layout-builder.block-inline-blockuw-cbl-copy-text")
 for sub in subHeadings:
     print(sub.get_attribute("outerHTML")) """
