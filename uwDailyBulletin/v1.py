@@ -66,13 +66,16 @@ mainContent = subHeadings[2].get_attribute("outerHTML")
 
 headings = []
 n = mainContent.find("<h2>")
+i = 0
 while n != -1:
     m = mainContent.find("<h2>", n+1)
     if m == -1:
         headings.append(mainContent[n:])
+        #headings[0] = {"title": "Bulletin"}
     else:
         headings.append(mainContent[n:m])
     n = m
+    i+=1
 print(headings[1])
 
 
