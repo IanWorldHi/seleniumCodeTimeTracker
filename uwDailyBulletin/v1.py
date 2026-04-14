@@ -66,14 +66,56 @@ mainContent = subHeadings[2].get_attribute("outerHTML")
 
 headings = []
 n = mainContent.find("<h2>")
+soup = BeautifulSoup(mainContent, "html.parser")
 i = 0
 while n != -1:
     m = mainContent.find("<h2>", n+1)
     if m == -1:
-        headings.append(mainContent[n:])
-        #headings[0] = {"title": "Bulletin"}
+        headings.append({"title": "", "paragraphs": "", "images": [], "links": []})
+        soup = BeautifulSoup(mainContent[n:], "html.parser")
+        title = (soup.find("h2"))
+        if title is not None:
+            title = title.get_text(strip=True)
+        headings[i]["title"] = title
+        ps  = soup.find_all("p")
+        texts = ""
+        for p in ps:
+            text = p.get_text(strip=True)
+            texts += text +"\n"
+        headings[i]["paragraphs"] = texts
+        imgs = soup.find_all("img")
+        for img in imgs:
+            src = img.get("src")
+            alt = img.get("alt")
+            headings[i]["images"].append({"alt": alt, "src": src})
+        links = soup.find_all("a")
+        for link in links:
+            text = link.get_text(strip=True)
+            href = link.get("href")
+            headings[i]["links"].append({"text": text, "href": href})
     else:
-        headings.append(mainContent[n:m])
+        headings.append({"title": "", "paragraphs": "", "images": [], "links": []})
+        soup = BeautifulSoup(mainContent[n:m], "html.parser")
+        title = (soup.find("h2"))
+        if title is not None:
+            title = title.get_text(strip=True)
+        headings[i]["title"] = title
+        ps  = soup.find_all("p")
+        texts = ""
+        for p in ps:
+            text = p.get_text(strip=True)
+            texts += text +"\n"
+        headings[i]["paragraphs"] = texts
+        imgs = soup.find_all("img")
+        for img in imgs:
+            src = img.get("src")
+            alt = img.get("alt")
+            headings[i]["images"].append({"alt": alt, "src": src})
+        links = soup.find_all("a")
+        for link in links:
+            text = link.get_text(strip=True)
+            href = link.get("href")
+            headings[i]["links"].append({"text": text, "href": href})
     n = m
     i+=1
 print(headings[1])
