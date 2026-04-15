@@ -42,23 +42,7 @@ linkToLatestPost2 = linkToLatestPost.find_element(By.TAG_NAME, "a")
 #For later backend use - date of latest post so only run for new posts
 datenow = linkToLatestPost2.text
 
-#print(linkToLatestPost2.get_attribute("outerHTML"))
 linkToLatestPost2.click()
-
-class subTopic:
-    id: str
-    title: str
-    paragraphs: list[str] = field(default_factory=list)
-    #basically calling list constructor to make empty list for each instance of subTopic - if i did = [] would be same list for all instances
-    images: list[dict] = field(default_factory=list) #{src, alt}
-    links: list[dict] = field(default_factory=list) #{text, href}
-    subtopics: list[dict] = field(default_factory=list) #{uhhh we'll see}
-    
-
-#def textCollector - 
-
-#line 568 & 569 - all the important content is in there
-#end 1289 (for 668) till 1292 so should be chill up to 566
 
 #"." instead of spaces for css selector to indicate compound classes
 subHeadings = driver.find_elements(By.CSS_SELECTOR, ".layout__region.layout__region--first .uw-text-align--left.block.block-layout-builder.block-inline-blockuw-cbl-copy-text .uw-copy-text .uw-copy-text__wrapper")
