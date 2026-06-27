@@ -102,7 +102,7 @@ while n != -1:
             headings[i]["links"].append({"text": text, "href": href})
     n = m
     i+=1
-print(headings[1])
+print(headings)
 
 
 

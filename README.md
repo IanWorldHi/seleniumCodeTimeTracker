@@ -11,5 +11,15 @@ Questions/CuriosityPiece:
 How would webscrapping work if I wanted to run a general script that could parse through different websites with different formats?
 How to automate mouse movements/clicks like actual mosue movements
 
+<!-- 
+Take a look at Go for notifications/backend
+
+npm install openai
+
+
+
+-->
+
+
 
 
