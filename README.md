@@ -14,6 +14,8 @@ How to automate mouse movements/clicks like actual mosue movements
 <!-- 
 Take a look at Go for notifications/backend
 
+Ai part: Retrieve and rerank pipeline
+
 npm install openai
 
 

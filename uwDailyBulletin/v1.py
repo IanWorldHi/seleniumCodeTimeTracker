@@ -20,89 +20,89 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 #Allows waiting in certain scenarios vs implicitly_wait wait runs after every find element i think
 
+def get_latest_post():
+    #not using rn
+    opts = Options()
+    opts.add_argument("--headless=new")
 
-#not using rn
-opts = Options()
-opts.add_argument("--headless=new")
 
+    #Error is because Pylance's type stubs for Selenium is outdated (confused typechcker)
+    #Doesn't recognize webdriver has callable attribute - works at runtime
 
-#Error is because Pylance's type stubs for Selenium is outdated (confused typechcker)
-#Doesn't recognize webdriver has callable attribute - works at runtime
+    #driver = webdriver.Chrome(options=opts) 
+    #^breaks the click()
+    driver = webdriver.Chrome()
+    driver.get("https://uwaterloo.ca/daily-bulletin/")
 
-#driver = webdriver.Chrome(options=opts) 
-#^breaks the click()
-driver = webdriver.Chrome()
-driver.get("https://uwaterloo.ca/daily-bulletin/")
+    driver.implicitly_wait(0.5)
 
-driver.implicitly_wait(0.5)
+    linkToLatestPost = driver.find_element(By.CLASS_NAME, "card__title")
+    linkToLatestPost2 = linkToLatestPost.find_element(By.TAG_NAME, "a")
 
-linkToLatestPost = driver.find_element(By.CLASS_NAME, "card__title")
-linkToLatestPost2 = linkToLatestPost.find_element(By.TAG_NAME, "a")
+    #For later backend use - date of latest post so only run for new posts
+    datenow = linkToLatestPost2.text
 
-#For later backend use - date of latest post so only run for new posts
-datenow = linkToLatestPost2.text
+    linkToLatestPost2.click()
 
-linkToLatestPost2.click()
+    #"." instead of spaces for css selector to indicate compound classes
+    subHeadings = driver.find_elements(By.CSS_SELECTOR, ".layout__region.layout__region--first .uw-text-align--left.block.block-layout-builder.block-inline-blockuw-cbl-copy-text .uw-copy-text .uw-copy-text__wrapper")
+    mainContent = subHeadings[2].get_attribute("outerHTML")
 
-#"." instead of spaces for css selector to indicate compound classes
-subHeadings = driver.find_elements(By.CSS_SELECTOR, ".layout__region.layout__region--first .uw-text-align--left.block.block-layout-builder.block-inline-blockuw-cbl-copy-text .uw-copy-text .uw-copy-text__wrapper")
-mainContent = subHeadings[2].get_attribute("outerHTML")
-
-headings = []
-n = mainContent.find("<h2>")
-soup = BeautifulSoup(mainContent, "html.parser")
-i = 0
-while n != -1:
-    m = mainContent.find("<h2>", n+1)
-    if m == -1:
-        headings.append({"title": "", "paragraphs": "", "images": [], "links": []})
-        soup = BeautifulSoup(mainContent[n:], "html.parser")
-        title = (soup.find("h2"))
-        if title is not None:
-            title = title.get_text(strip=True)
-        headings[i]["title"] = title
-        ps  = soup.find_all("p")
-        texts = ""
-        for p in ps:
-            text = p.get_text(strip=True)
-            texts += text +"\n"
-        headings[i]["paragraphs"] = texts
-        imgs = soup.find_all("img")
-        for img in imgs:
-            src = img.get("src")
-            alt = img.get("alt")
-            headings[i]["images"].append({"alt": alt, "src": src})
-        links = soup.find_all("a")
-        for link in links:
-            text = link.get_text(strip=True)
-            href = link.get("href")
-            headings[i]["links"].append({"text": text, "href": href})
-    else:
-        headings.append({"title": "", "paragraphs": "", "images": [], "links": []})
-        soup = BeautifulSoup(mainContent[n:m], "html.parser")
-        title = (soup.find("h2"))
-        if title is not None:
-            title = title.get_text(strip=True)
-        headings[i]["title"] = title
-        ps  = soup.find_all("p")
-        texts = ""
-        for p in ps:
-            text = p.get_text(strip=True)
-            texts += text +"\n"
-        headings[i]["paragraphs"] = texts
-        imgs = soup.find_all("img")
-        for img in imgs:
-            src = img.get("src")
-            alt = img.get("alt")
-            headings[i]["images"].append({"alt": alt, "src": src})
-        links = soup.find_all("a")
-        for link in links:
-            text = link.get_text(strip=True)
-            href = link.get("href")
-            headings[i]["links"].append({"text": text, "href": href})
-    n = m
-    i+=1
-print(headings)
+    headings = []
+    n = mainContent.find("<h2>")
+    soup = BeautifulSoup(mainContent, "html.parser")
+    i = 0
+    while n != -1:
+        m = mainContent.find("<h2>", n+1)
+        if m == -1:
+            headings.append({"title": "", "paragraphs": "", "images": [], "links": []})
+            soup = BeautifulSoup(mainContent[n:], "html.parser")
+            title = (soup.find("h2"))
+            if title is not None:
+                title = title.get_text(strip=True)
+            headings[i]["title"] = title
+            ps  = soup.find_all("p")
+            texts = ""
+            for p in ps:
+                text = p.get_text(strip=True)
+                texts += text +"\n"
+            headings[i]["paragraphs"] = texts
+            imgs = soup.find_all("img")
+            for img in imgs:
+                src = img.get("src")
+                alt = img.get("alt")
+                headings[i]["images"].append({"alt": alt, "src": src})
+            links = soup.find_all("a")
+            for link in links:
+                text = link.get_text(strip=True)
+                href = link.get("href")
+                headings[i]["links"].append({"text": text, "href": href})
+        else:
+            headings.append({"title": "", "paragraphs": "", "images": [], "links": []})
+            soup = BeautifulSoup(mainContent[n:m], "html.parser")
+            title = (soup.find("h2"))
+            if title is not None:
+                title = title.get_text(strip=True)
+            headings[i]["title"] = title
+            ps  = soup.find_all("p")
+            texts = ""
+            for p in ps:
+                text = p.get_text(strip=True)
+                texts += text +"\n"
+            headings[i]["paragraphs"] = texts
+            imgs = soup.find_all("img")
+            for img in imgs:
+                src = img.get("src")
+                alt = img.get("alt")
+                headings[i]["images"].append({"alt": alt, "src": src})
+            links = soup.find_all("a")
+            for link in links:
+                text = link.get_text(strip=True)
+                href = link.get("href")
+                headings[i]["links"].append({"text": text, "href": href})
+        n = m
+        i+=1
+    return headings
 
 
 
