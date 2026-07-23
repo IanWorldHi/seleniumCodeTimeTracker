@@ -4,6 +4,9 @@ from openai import OpenAI
 from v1 import get_latest_post
 from sentence_transformers import SentenceTransformer, util, CrossEncoder
 
+#make a huggingface account for faster & avoid limits
+#is there a faster way to load weights and just store them?
+
 load_dotenv()
 
 chatgptkey = os.getenv("CHATGPTKEY")
@@ -38,17 +41,23 @@ sentences = [ #ai generated rn
 ]
 
 queryEmbeddings = model2.encode(sentences)
+#idealy store them somewhere so it doesn't retoggle every time, some sort of db
 
+print(queryEmbeddings.shape)
 print(queryEmbeddings)
 
-response = client.responses.create(
+similarities = model2.similarity(queryEmbeddings, model2.encode([prompt]))
+#am i first storing their similarities to each other? or just always compare to prompt
+print(similarities)
+
+""" response = client.responses.create(
     model="gpt-4.1-mini",
-    input="What model is best to call with an api key for a notificatio service that is parsed by chatgpt to send to only the appriopriate users"
-)
+    input=""
+) """
 #doesn't save context
 #do i need it to save context? 
 
-print(response.output_text)
+#print(response.output_text)
 
 
 
