@@ -104,7 +104,7 @@ def get_latest_post():
         i+=1
     return headings
 
-
+print(get_latest_post())
 
 #print(subHeadings.get_attribute("outerHTML"))
 

@@ -1,8 +1,23 @@
 import os
+import json
+import torch
+import string
+import numpy as np
+
 from dotenv import load_dotenv
 from openai import OpenAI
 from v1 import get_latest_post
-from sentence_transformers import SentenceTransformer, util, CrossEncoder
+from sentence_transformers import SentenceTransformer, CrossEncoder #util
+from sentence_transformers.util import http_get, semantic_search
+
+from rank_bm25 import BM25Okapi
+from sklearn.feature_extraction import _stop_words
+from tqdm.autonotebook import tqdm
+
+
+if not torch.cuda.is_available(): #forgot hwo to set this, does it have to be in a notebook to set?
+    print("CUDA is not available. Using CPU instead.")
+    raise SystemError("Error for now")
 
 #make a huggingface account for faster & avoid limits
 #is there a faster way to load weights and just store them?
@@ -12,9 +27,23 @@ load_dotenv()
 chatgptkey = os.getenv("CHATGPTKEY")
 client = OpenAI(api_key=chatgptkey)
 
-model = CrossEncoder("cross-encoder/stsb-distilroberta-base")
-model2 = SentenceTransformer('sentence-transformers/multi-qa-mpnet-base-dot-v1')
+
+bi_encoder = SentenceTransformer("sentence-transformers/multi-qa-MiniLM-L6-cos-v1")
+bi_encoder.max_seq_length = 256 #truncates if too long
+#top_k
+cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L6-v2")
+
+#model = CrossEncoder("cross-encoder/stsb-distilroberta-base")
+#model2 = SentenceTransformer('sentence-transformers/multi-qa-mpnet-base-dot-v1')
+
 prompt = str(get_latest_post())
+
+def promptCleaner(prompt):
+    prompt2 = ""
+    for tokens in prompt.lower().split():
+        prompt2 += token.strip()
+    return prompt2
+
 
 #parse v1.py into prompt
 sentences = [ #ai generated rn
@@ -39,6 +68,9 @@ sentences = [ #ai generated rn
     "asdfjkl test test",
     "I'm interested in cybersecurity but NOT in anything involving public speaking or large group events."
 ]
+
+corpus_embeddings = bi_encoder.encode(sentences, convert_to_tensor=True, show_progress_bar=True)
+#am i supposed to include the prompt here?
 
 queryEmbeddings = model2.encode(sentences)
 #idealy store them somewhere so it doesn't retoggle every time, some sort of db
