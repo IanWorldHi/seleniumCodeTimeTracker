@@ -20,6 +20,36 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 #Allows waiting in certain scenarios vs implicitly_wait wait runs after every find element i think
 
+def _parse_sections(html):
+    sections = []
+    n = html.find("<h2>")
+    while n != -1:
+        m = html.find("<h2>", n+1)
+        end = m if m != -1 else len(html)
+        soup = BeautifulSoup(html[n:end], "html.parser")
+
+        parts = []
+        title = soup.find("h2")
+        if title is not None:
+            parts.append(title.get_text(strip=True))
+        for p in soup.find_all("p"):
+            text = p.get_text(strip=True)
+            if text:
+                parts.append(text)
+        for img in soup.find_all("img"):
+            alt = img.get("alt")
+            if alt:
+                parts.append(alt)
+        for link in soup.find_all("a"):
+            text = link.get_text(strip=True)
+            href = link.get("href")
+            if href:
+                parts.append(f"{text}: {href}" if text else href)
+
+        sections.append("\n".join(parts))
+        n = m
+    return sections
+
 def get_latest_post():
     #not using rn
     opts = Options()
@@ -48,61 +78,15 @@ def get_latest_post():
     subHeadings = driver.find_elements(By.CSS_SELECTOR, ".layout__region.layout__region--first .uw-text-align--left.block.block-layout-builder.block-inline-blockuw-cbl-copy-text .uw-copy-text .uw-copy-text__wrapper")
     mainContent = subHeadings[2].get_attribute("outerHTML")
 
-    headings = []
-    n = mainContent.find("<h2>")
-    soup = BeautifulSoup(mainContent, "html.parser")
-    i = 0
-    while n != -1:
-        m = mainContent.find("<h2>", n+1)
-        if m == -1:
-            headings.append({"title": "", "paragraphs": "", "images": [], "links": []})
-            soup = BeautifulSoup(mainContent[n:], "html.parser")
-            title = (soup.find("h2"))
-            if title is not None:
-                title = title.get_text(strip=True)
-            headings[i]["title"] = title
-            ps  = soup.find_all("p")
-            texts = ""
-            for p in ps:
-                text = p.get_text(strip=True)
-                texts += text +"\n"
-            headings[i]["paragraphs"] = texts
-            imgs = soup.find_all("img")
-            for img in imgs:
-                src = img.get("src")
-                alt = img.get("alt")
-                headings[i]["images"].append({"alt": alt, "src": src})
-            links = soup.find_all("a")
-            for link in links:
-                text = link.get_text(strip=True)
-                href = link.get("href")
-                headings[i]["links"].append({"text": text, "href": href})
-        else:
-            headings.append({"title": "", "paragraphs": "", "images": [], "links": []})
-            soup = BeautifulSoup(mainContent[n:m], "html.parser")
-            title = (soup.find("h2"))
-            if title is not None:
-                title = title.get_text(strip=True)
-            headings[i]["title"] = title
-            ps  = soup.find_all("p")
-            texts = ""
-            for p in ps:
-                text = p.get_text(strip=True)
-                texts += text +"\n"
-            headings[i]["paragraphs"] = texts
-            imgs = soup.find_all("img")
-            for img in imgs:
-                src = img.get("src")
-                alt = img.get("alt")
-                headings[i]["images"].append({"alt": alt, "src": src})
-            links = soup.find_all("a")
-            for link in links:
-                text = link.get_text(strip=True)
-                href = link.get("href")
-                headings[i]["links"].append({"text": text, "href": href})
-        n = m
-        i+=1
-    return headings
+    sections = _parse_sections(mainContent)
+
+    #sidebar with "When and Where" and "Upcoming service interruptions", lives in region--second not --first
+    sidebarWrappers = driver.find_elements(By.CSS_SELECTOR, ".layout__region.layout__region--second .uw-text-align--left.block.block-layout-builder.block-inline-blockuw-cbl-copy-text .uw-copy-text .uw-copy-text__wrapper")
+    if sidebarWrappers:
+        whenAndWhere = sidebarWrappers[-1].get_attribute("outerHTML")
+        sections.extend(_parse_sections(whenAndWhere))
+
+    return "\n\n".join(sections)
 
 print(get_latest_post())
 

@@ -36,12 +36,12 @@ cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L6-v2")
 #model = CrossEncoder("cross-encoder/stsb-distilroberta-base")
 #model2 = SentenceTransformer('sentence-transformers/multi-qa-mpnet-base-dot-v1')
 
-prompt = str(get_latest_post())
+prompt = get_latest_post()
 
 def promptCleaner(prompt):
     prompt2 = ""
     for tokens in prompt.lower().split():
-        prompt2 += token.strip()
+        prompt2 += tokens.strip(string.punctuation) + " "
     return prompt2
 
 
