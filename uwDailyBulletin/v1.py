@@ -88,7 +88,7 @@ def get_latest_post():
 
     return "\n\n".join(sections)
 
-print(get_latest_post())
+
 
 #print(subHeadings.get_attribute("outerHTML"))
 

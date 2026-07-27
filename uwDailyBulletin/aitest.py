@@ -1,3 +1,5 @@
+#hybrid search pipeline
+
 import os
 import json
 import torch
@@ -11,11 +13,15 @@ from sentence_transformers import SentenceTransformer, CrossEncoder #util
 from sentence_transformers.util import http_get, semantic_search
 
 from rank_bm25 import BM25Okapi
+#Matches on overlapepd keywords not semantic similarity
+#Sort of a double check after the encoders (encoders might miss acronyms/course codes etc)
 from sklearn.feature_extraction import _stop_words
 from tqdm.autonotebook import tqdm
+#porgress bar library
 
+print("CUDA available:", torch.cuda.is_available())
 
-if not torch.cuda.is_available(): #forgot hwo to set this, does it have to be in a notebook to set?
+if not torch.cuda.is_available(): #forgot how to set this, does it have to be in a notebook to set?
     print("CUDA is not available. Using CPU instead.")
     raise SystemError("Error for now")
 
@@ -38,10 +44,13 @@ cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L6-v2")
 
 prompt = get_latest_post()
 
+#prob not the most efficent flow
 def promptCleaner(prompt):
-    prompt2 = ""
+    prompt2 = []
     for tokens in prompt.lower().split():
-        prompt2 += tokens.strip(string.punctuation) + " "
+        tokens += tokens.strip(string.punctuation)
+        if len(tokens) > 0 and tokens not in _stop_words.ENGLISH_STOP_WORDS: #filters out common words like (the, is, and, etc)
+            prompt2.append(tokens)
     return prompt2
 
 
@@ -72,15 +81,66 @@ sentences = [ #ai generated rn
 corpus_embeddings = bi_encoder.encode(sentences, convert_to_tensor=True, show_progress_bar=True)
 #am i supposed to include the prompt here?
 
-queryEmbeddings = model2.encode(sentences)
+tokenized_corpus = [] 
+for passage in tqdm(sentences):
+    tokenized_corpus.append(promptCleaner(passage))
+bm25 = BM25Okapi(tokenized_corpus)
+
+print(bm25)
+
+
+def search(query, top_k=10):
+    print("Input question:", query)
+
+    ##### BM25 search (lexical search) #####
+    bm25_scores = bm25.get_scores(promptCleaner(query))
+    top_n = np.argpartition(bm25_scores, -5)[-5:]
+    bm25_hits = [{"corpus_id": idx, "score": bm25_scores[idx]} for idx in top_n]
+    bm25_hits = sorted(bm25_hits, key=lambda x: x["score"], reverse=True)
+
+    print("Top-3 lexical search (BM25) hits")
+    for hit in bm25_hits[0:3]:
+        print("\t{:.3f}\t{}".format(hit["score"], sentences[hit["corpus_id"]].replace("\n", " ")))
+
+    ##### Semantic Search #####
+    # Encode the query using the bi-encoder and find potentially relevant sentences
+    question_embedding = bi_encoder.encode(query, convert_to_tensor=True)
+    question_embedding = question_embedding.cuda()
+    hits = semantic_search(question_embedding, corpus_embeddings, top_k=top_k)
+    hits = hits[0]  # Get the hits for the first (and only) query
+
+    ##### Re-Ranking #####
+    # Score all retrieved sentences with the cross_encoder
+    cross_inp = [[query, sentences[hit["corpus_id"]]] for hit in hits]
+    cross_scores = cross_encoder.predict(cross_inp)
+
+    for idx in range(len(cross_scores)):
+        hits[idx]["cross-score"] = cross_scores[idx]
+
+    print("\n-------------------------\n")
+    print("Top-3 Bi-Encoder Retrieval hits")
+    hits = sorted(hits, key=lambda x: x["score"], reverse=True)
+    for hit in hits[0:3]:
+        print("\t{:.3f}\t{}".format(hit["score"], sentences[hit["corpus_id"]].replace("\n", " ")))
+
+    print("\n-------------------------\n")
+    print("Top-3 Cross-Encoder Re-ranker hits")
+    hits = sorted(hits, key=lambda x: x["cross-score"], reverse=True)
+    for hit in hits[0:3]:
+        print("\t{:.3f}\t{}".format(hit["cross-score"], sentences[hit["corpus_id"]].replace("\n", " ")))
+
+    return hits
+
+
+search(prompt)
+
+
+#queryEmbeddings = cross_encoder.encode(sentences)
 #idealy store them somewhere so it doesn't retoggle every time, some sort of db
 
-print(queryEmbeddings.shape)
-print(queryEmbeddings)
 
-similarities = model2.similarity(queryEmbeddings, model2.encode([prompt]))
+#similarities = model2.similarity(queryEmbeddings, model2.encode([prompt]))
 #am i first storing their similarities to each other? or just always compare to prompt
-print(similarities)
 
 """ response = client.responses.create(
     model="gpt-4.1-mini",
@@ -89,7 +149,7 @@ print(similarities)
 #doesn't save context
 #do i need it to save context? 
 
-#print(response.output_text)
+
 
 
 
