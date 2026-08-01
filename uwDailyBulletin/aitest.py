@@ -97,8 +97,8 @@ def search(prompt, top_k):
     bm25_hits = [{"corpus_id": idx, "score": bm25_scores[idx]} for idx in range(len(bm25_scores))]
     bm25_hits = sorted(bm25_hits, key=lambda x: x["score"], reverse=True)
 
-    print("Top-3 lexical search (BM25) hits")
-    for hit in bm25_hits[0:3]:
+    print("Sorted lexical search (BM25) hits")
+    for hit in bm25_hits:
         print("\t{:.3f}\t{}".format(hit["score"], sentences[hit["corpus_id"]].replace("\n", " ")))
 
     # Semantic Search 
@@ -121,15 +121,15 @@ def search(prompt, top_k):
         hits[idx]["cross-score"] = cross_scores[idx]
 
     print("\n-------------------------\n")
-    print("Top-3 Bi-Encoder Retrieval hits")
+    print("Sorted Bi-Encoder Retrieval hits")
     hits = sorted(hits, key=lambda x: x["score"], reverse=True)
-    for hit in hits[0:3]:
+    for hit in hits:
         print("\t{:.3f}\t{}".format(hit["score"], sentences[hit["corpus_id"]].replace("\n", " ")))
 
     print("\n-------------------------\n")
-    print("Top-3 Cross-Encoder Re-ranker hits")
+    print("Sorted Cross-Encoder Re-ranker hits")
     hits = sorted(hits, key=lambda x: x["cross-score"], reverse=True)
-    for hit in hits[0:3]:
+    for hit in hits:
         print("\t{:.3f}\t{}".format(hit["cross-score"], sentences[hit["corpus_id"]].replace("\n", " ")))
     
     return hits
