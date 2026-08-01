@@ -78,40 +78,43 @@ sentences = [ #ai generated rn
     "I'm interested in cybersecurity but NOT in anything involving public speaking or large group events."
 ]
 
-corpus_embeddings = bi_encoder.encode(sentences, convert_to_tensor=True, show_progress_bar=True)
+corpus_embeddings = bi_encoder.encode(sentences, convert_to_tensor=True, show_progress_bar=True).cuda()
 #am i supposed to include the prompt here?
 
 tokenized_corpus = [] 
 for passage in tqdm(sentences):
     tokenized_corpus.append(promptCleaner(passage))
 bm25 = BM25Okapi(tokenized_corpus)
+#rank+bm25.BM25Okapi object ofc
 
-print(bm25)
+def search(prompt, top_k):
+    print("Input question:", prompt)
 
-
-def search(query, top_k=10):
-    print("Input question:", query)
-
-    ##### BM25 search (lexical search) #####
-    bm25_scores = bm25.get_scores(promptCleaner(query))
-    top_n = np.argpartition(bm25_scores, -5)[-5:]
-    bm25_hits = [{"corpus_id": idx, "score": bm25_scores[idx]} for idx in top_n]
+    # BM25 search (lexical search)
+    bm25_scores = bm25.get_scores(promptCleaner(prompt))
+    #scores for each sentence in corpus vs prompt, a float array
+    #top_n = np.argpartition(bm25_scores, -5)[-5:] #rearranges (partial sort) top 5 largest to the end of array
+    bm25_hits = [{"corpus_id": idx, "score": bm25_scores[idx]} for idx in range(len(bm25_scores))]
     bm25_hits = sorted(bm25_hits, key=lambda x: x["score"], reverse=True)
 
     print("Top-3 lexical search (BM25) hits")
     for hit in bm25_hits[0:3]:
         print("\t{:.3f}\t{}".format(hit["score"], sentences[hit["corpus_id"]].replace("\n", " ")))
 
-    ##### Semantic Search #####
+    # Semantic Search 
     # Encode the query using the bi-encoder and find potentially relevant sentences
-    question_embedding = bi_encoder.encode(query, convert_to_tensor=True)
+    question_embedding = bi_encoder.encode(prompt, convert_to_tensor=True)
     question_embedding = question_embedding.cuda()
-    hits = semantic_search(question_embedding, corpus_embeddings, top_k=top_k)
-    hits = hits[0]  # Get the hits for the first (and only) query
+    #.cuda() moves from cpu to gpu for faster computation (technically not needed, sentencetransformer shoudl auto do it)
+    #since semantic_search is cossine similarity/matric multiplication pytorch requires both tensors to liv eon same device
 
-    ##### Re-Ranking #####
+    hits = semantic_search(question_embedding, corpus_embeddings, top_k=top_k)
+    hits = hits[0]  # Get the hits for the first (and only) query as it can be multiple x multiple
+
+    # Re-Ranking
     # Score all retrieved sentences with the cross_encoder
-    cross_inp = [[query, sentences[hit["corpus_id"]]] for hit in hits]
+    cross_inp = [[prompt, sentences[hit["corpus_id"]]] for hit in hits]
+    # list of pairs of prompt and full text sentence for all that passed bi-encoder
     cross_scores = cross_encoder.predict(cross_inp)
 
     for idx in range(len(cross_scores)):
@@ -128,11 +131,13 @@ def search(query, top_k=10):
     hits = sorted(hits, key=lambda x: x["cross-score"], reverse=True)
     for hit in hits[0:3]:
         print("\t{:.3f}\t{}".format(hit["cross-score"], sentences[hit["corpus_id"]].replace("\n", " ")))
-
+    
     return hits
 
 
-search(prompt)
+search(prompt, len(sentences))
+
+#filter by score
 
 
 #queryEmbeddings = cross_encoder.encode(sentences)
