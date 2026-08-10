@@ -20,6 +20,8 @@ aka
 Retrieve and rerank pipeline
 aka hybrid search with a cross-encoder ranker
 
+Not sure if I'm still doing the ai agent go through, semantics should be fine for now
+
 npm install openai
 
 
