@@ -137,10 +137,20 @@ def search(prompt, top_k):
 
 search(prompt, len(sentences))
 
+
+
+
+
+
+
+
+
 #non finalized, still looking at articles as examples, so far none are relaly too related
 #lexical ratings: don't need to filter by much maybe like 25 even tho max hits 200ish, correlation not high
-#bi-encoder:up to 0.270 to 0
-#cross-encoder: negatives like -3.6 to -5
+#1-20
+
+#bi-encoder:up to 0.270 to 0, 0.28 to -0.03
+#cross-encoder: negatives like -3.6 to -5, -6 to -7.6
 
 
 
