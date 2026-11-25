@@ -1,6 +1,7 @@
 # seleniumCodeTimeTracker
 
-Making a code tracker for long term progress bypassing wakatime free limitations
+Making a script that takes the html from the uwdailybulletin whenever there's an update and feed it into an AI to filter it for what's relevant to me - sending a notification when it is
+<!-- Making a code tracker for long term progress bypassing wakatime free limitations -->
 Essentially using selenium to scrap the data from it daily and add it to a backend
 
 Possible selenium issue:
